@@ -2,7 +2,7 @@ name: Cleanup
 on:
   workflow_dispatch:
   schedule:
-    - cron: '7 40 * * *'
+    - cron: '40 7 * * *'
 
 jobs:
   delete-docker-images:
