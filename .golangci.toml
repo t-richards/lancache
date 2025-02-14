@@ -1,0 +1,34 @@
+[linters]
+
+disable = [
+  # things that will likely never be fixed
+  "exhaustruct",  # objectively gross, literally nobody wants this
+  "gofumpt",      # conflicts with goimports
+  "paralleltest", # don't care
+
+  # needs explicit configuration, ugh
+  "depguard",
+  "gci",
+
+  # things we don't care about at the moment
+  "gochecknoglobals",
+  "gochecknoinits",
+  "nonamedreturns",
+  "varnamelen",
+]
+
+presets = [
+  "bugs",
+  "comment",
+  "complexity",
+  "error",
+  "format",
+  "import",
+  "metalinter",
+  "module",
+  "performance",
+  "sql",
+  "style",
+  "test",
+  "unused",
+]

@@ -1,0 +1,5 @@
+# build output
+bin/
+
+# cache files
+cache/

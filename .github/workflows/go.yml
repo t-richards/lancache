@@ -1,0 +1,50 @@
+name: Go
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout source
+      uses: actions/checkout@v4
+
+    - name: Setup go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
+
+    - name: Build app
+      env:
+        GOFLAGS: "-trimpath -mod=readonly -modcacherw"
+        CGO_ENABLED: 0
+      run: |
+        go mod verify
+        go build -ldflags="-s -w" -o lancache
+
+    - name: Show module versions
+      run: go version -m lancache
+
+    - name: Generate SBOM
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        gh ext install advanced-security/gh-sbom
+        gh sbom -l
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout source
+      uses: actions/checkout@v4
+
+    - name: Setup go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
+        cache: false
+
+    - name: Lint code
+      uses: golangci/golangci-lint-action@v6
+      with:
+        version: v1.64.2
+        args: --timeout=5m

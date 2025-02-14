@@ -1,0 +1,19 @@
+name: Cleanup
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '7 40 * * *'
+
+jobs:
+  delete-docker-images:
+    name: Delete old Docker images
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    steps:
+      - uses: actions/delete-package-versions@v5
+        with:
+          package-name: lancache
+          package-type: container
+          min-versions-to-keep: 9
+          delete-only-untagged-versions: true

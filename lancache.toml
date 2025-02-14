@@ -1,0 +1,7 @@
+[steam]
+depots = [
+    228989,  # VC 2022 Redist
+    499181,  # Braid, Anniversary Edition
+    1203621, # Enshrouded
+]
+cache_all = false
