@@ -74,6 +74,7 @@ func newHTTPClient() *http.Client {
 
 func (a *Application) StartCacheServer() {
 	mux := http.NewServeMux()
+	mux.HandleFunc("/lancache-heartbeat", heartbeatHandler)
 	mux.HandleFunc("/depot/{depot}/", a.lancacheHandler)
 	server := &http.Server{
 		Addr:              ":80",
