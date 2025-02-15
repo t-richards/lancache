@@ -10,6 +10,9 @@ disable = [
   "depguard",
   "gci",
 
+  # not needed for this project
+  "canonicalheader",
+
   # things we don't care about at the moment
   "gochecknoglobals",
   "gochecknoinits",

@@ -8,5 +8,5 @@ const (
 
 func heartbeatHandler(w http.ResponseWriter, _ *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
-	w.Header().Set(lancacheProcessedByHeader, "lancache") //nolint:canonicalheader
+	w.Header().Set(lancacheProcessedByHeader, "lancache")
 }
