@@ -8,7 +8,7 @@ RUN mkdir -p /opt/cache
 COPY go.mod go.sum ./
 RUN go mod download -x
 COPY . .
-RUN go build -v -ldflags="-s -w" -o lancache
+RUN go build -v -tags prod -ldflags="-s -w" -o lancache
 RUN setcap cap_net_bind_service=+ep /go/src/app/lancache
 RUN update-ca-certificates
 
@@ -25,6 +25,7 @@ FROM scratch AS runner
 COPY --from=root / /
 USER app
 WORKDIR /opt
+ENV APP_ENV=production
 VOLUME ["/opt/cache"]
 ENTRYPOINT ["/bin/lancache"]
 CMD [""]

@@ -21,7 +21,7 @@ services:
   lancache:
     image: ghcr.io/t-richards/lancache:latest
     env:
-      - APP_ENV=production
+      # - APP_ENV=production # (optional) set to "development" for colorful console output
       # - BYPASS_CACHE=true # (optional) bypass cache for troubleshooting
     ports:
       - "80:80"
