@@ -7,6 +7,6 @@ const (
 )
 
 func heartbeatHandler(w http.ResponseWriter, _ *http.Request) {
+	w.Header()[lancacheProcessedByHeader] = []string{"lancache"}
 	w.WriteHeader(http.StatusNoContent)
-	w.Header().Set(lancacheProcessedByHeader, "lancache")
 }
