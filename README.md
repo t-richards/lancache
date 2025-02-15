@@ -31,6 +31,10 @@ services:
       - /path/to/lancache.toml:/opt/lancache.toml
 ```
 
+> [!NOTE]  
+> The cache directory must be writable by the container.
+> The container runs as the `app` user with UID 1234.
+
 ## Configuration
 
 ```toml
@@ -52,6 +56,10 @@ cache_all = false
 See also: a complete example [lancache.toml](lancache.toml).
 
 ## Contributing
+
+Requirements:
+
+ - Go `=1.24`
 
 ```bash
 # Build
