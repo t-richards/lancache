@@ -14,7 +14,7 @@ A proof-of-concept custom LAN cache for Steam.
 
 ## Usage
 
-Via docker compose:
+1. Run the app (via docker compose, for example):
 
 ```yaml
 services:
@@ -34,6 +34,8 @@ services:
 > [!NOTE]  
 > The cache directory must be writable by the container.
 > The container runs as the `app` user with UID 1234.
+
+2. Set a DNS record for `lancache.steamcontent.com` pointing to the host running the app.
 
 ## Configuration
 
