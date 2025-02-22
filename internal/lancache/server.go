@@ -193,23 +193,6 @@ func (a *Application) fetchAndCache(
 		return err
 	}
 
-	// Perform the request.
-	resp, err := a.httpClient.Do(upstreamReq)
-	if err != nil {
-		return fmt.Errorf("while fetching upstream: %w", err)
-	}
-	defer resp.Body.Close()
-
-	// Ensure we have a 200 OK response.
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("%w: %d", errResponseNotOK, resp.StatusCode)
-	}
-
-	if resp.ContentLength > 0 {
-		w.Header().Add("Content-Length", strconv.FormatInt(resp.ContentLength, 10))
-		cacheMissBytes.WithLabelValues(depotID).Add(float64(resp.ContentLength))
-	}
-
 	// Create a temporary file to store the response.
 	tmpFile, err := os.CreateTemp(filepath.Dir(filename), filepath.Base(filename)+".tmp")
 	if err != nil {
@@ -223,6 +206,25 @@ func (a *Application) fetchAndCache(
 			os.Remove(tmpFile.Name())
 		}
 	}()
+
+	// Perform the request.
+	resp, err := a.httpClient.Do(upstreamReq)
+	if err != nil {
+		return fmt.Errorf("while fetching upstream: %w", err)
+	}
+	defer resp.Body.Close()
+
+	// Ensure we have a 200 OK response.
+	if resp.StatusCode != http.StatusOK {
+		_, _ = io.Copy(io.Discard, resp.Body)
+
+		return fmt.Errorf("%w: %d", errResponseNotOK, resp.StatusCode)
+	}
+
+	if resp.ContentLength > 0 {
+		w.Header().Add("Content-Length", strconv.FormatInt(resp.ContentLength, 10))
+		cacheMissBytes.WithLabelValues(depotID).Add(float64(resp.ContentLength))
+	}
 
 	// Send file contents to the Steam client and the temporary file.
 	multiWriter := io.MultiWriter(w, tmpFile)
