@@ -31,11 +31,24 @@ services:
       - /path/to/lancache.toml:/opt/lancache.toml
 ```
 
-> [!NOTE]  
+> [!NOTE]
 > The cache directory must be writable by the container.
 > The container runs as the `app` user with UID 1234.
 
 2. Set a DNS record for `lancache.steamcontent.com` pointing to the host running the app.
+
+> [!NOTE]
+> Steam will reject your LAN cache if the response TTL is too high.
+> Additionally, some DNS resolvers will still return public AAAA records even if you override the A record for a given hostname.
+> We suggest using the following CNAME -> A configuration for best results.
+
+```
+$ dig lancache.steamcontent.com
+<snip>
+;; ANSWER SECTION:
+lancache.steamcontent.com.   5     IN      CNAME   lancache.lan.
+lancache.lan.              600     IN      A       192.168.1.121
+```
 
 ## Configuration
 
