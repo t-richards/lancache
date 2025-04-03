@@ -202,8 +202,8 @@ func (a *Application) fetchAndCache(
 	// Ensure the temporary file is cleaned up if anything fails.
 	defer func() {
 		if err != nil {
-			tmpFile.Close()
-			os.Remove(tmpFile.Name())
+			_ = tmpFile.Close()
+			_ = os.Remove(tmpFile.Name())
 		}
 	}()
 

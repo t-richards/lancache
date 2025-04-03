@@ -1,37 +1,31 @@
+version = "2"
+
 [linters]
-
+default = "all"
 disable = [
-  # things that will likely never be fixed
-  "exhaustruct",  # objectively gross, literally nobody wants this
-  "gofumpt",      # conflicts with goimports
-  "paralleltest", # don't care
+  # things to address first
+  "errcheck",
+  "revive",
 
-  # needs explicit configuration, ugh
-  "depguard",
-  "gci",
+  # objectively gross, literally nobody wants this
+  "exhaustruct",
 
   # not needed for this project
   "canonicalheader",
+
+  # needs explicit configuration
+  "depguard",
 
   # things we don't care about at the moment
   "gochecknoglobals",
   "gochecknoinits",
   "nonamedreturns",
-  "varnamelen",
+  "paralleltest",
+  "varnamelen"
 ]
 
-presets = [
-  "bugs",
-  "comment",
-  "complexity",
-  "error",
-  "format",
-  "import",
-  "metalinter",
-  "module",
-  "performance",
-  "sql",
-  "style",
-  "test",
-  "unused",
+[formatters]
+enable = [
+  "gofmt",
+  "goimports"
 ]

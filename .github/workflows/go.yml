@@ -41,10 +41,9 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version-file: go.mod
-        cache: false
 
     - name: Lint code
-      uses: golangci/golangci-lint-action@v6
+      uses: golangci/golangci-lint-action@v7
       with:
-        version: v1.64.2
+        version: v2.0.2
         args: --timeout=5m
