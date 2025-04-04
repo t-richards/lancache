@@ -26,10 +26,26 @@ const cacheDirPerms = 0755
 // Timeout for reading headers on requests.
 const readHeaderTimeout = 10 * time.Second
 
-var (
-	// ErrResponseNotOK is returned when the response from the upstream server is not a 200.
-	errResponseNotOK = errors.New("response was not OK")
-)
+// ResponseError is returned when the upstream server returns a non-200 response.
+type ResponseError interface {
+	error
+	StatusCode() int
+}
+
+type responseError struct {
+	error
+	code int
+}
+
+func (err responseError) Error() string {
+	return fmt.Sprintf("upstream server returned %d", err.code)
+}
+func (err responseError) Unwrap() error {
+	return err.error
+}
+func (err responseError) StatusCode() int {
+	return err.code
+}
 
 type Application struct {
 	cacheConfig *config.LancacheConfig
@@ -107,6 +123,16 @@ func shouldCache(cacheConfig *config.LancacheConfig, depot string) bool {
 	return false
 }
 
+// Returns a normalized path for use in the cache directory.
+// May not be valid for Windows, but we don't care about Windows.
+func clean(path string) string {
+	if strings.HasPrefix(path, "/") {
+		return filepath.Clean(path)
+	}
+
+	return filepath.Clean("/" + path)
+}
+
 func (a *Application) lancacheHandler(w http.ResponseWriter, r *http.Request) {
 	requests.Inc()
 
@@ -130,7 +156,7 @@ func (a *Application) lancacheHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cachePath := filepath.Join(cacheDir, r.URL.Path)
+	cachePath := filepath.Join(cacheDir, clean(r.URL.Path))
 
 	// We are interested in caching the file.
 	fileInfo, err := os.Stat(cachePath)
@@ -165,6 +191,13 @@ func (a *Application) lancacheHandler(w http.ResponseWriter, r *http.Request) {
 	// Fetch it from the upstream server and cache it.
 	err = a.fetchAndCache(w, r, depot, cachePath)
 	if err != nil {
+		var responseErr ResponseError
+		if errors.As(err, &responseErr) {
+			// The upstream server returned a non-200 response.
+			http.Error(w, err.Error(), responseErr.StatusCode())
+
+			return
+		}
 		// By this point, we may have already written some response data to the client.
 		// We can't change response headers now, so we log the error and move on.
 		log.Error().Err(err).Str("depot", depot).Str("host", r.Host).Str("path", r.URL.Path).Msg("while caching upstream")
@@ -210,7 +243,10 @@ func (a *Application) fetchAndCache(
 	// Perform the request.
 	resp, err := a.httpClient.Do(upstreamReq)
 	if err != nil {
-		return fmt.Errorf("while fetching upstream: %w", err)
+		return responseError{
+			error: err,
+			code:  http.StatusBadGateway,
+		}
 	}
 	defer resp.Body.Close()
 
@@ -218,7 +254,9 @@ func (a *Application) fetchAndCache(
 	if resp.StatusCode != http.StatusOK {
 		_, _ = io.Copy(io.Discard, resp.Body)
 
-		return fmt.Errorf("%w: %d", errResponseNotOK, resp.StatusCode)
+		return responseError{
+			code: resp.StatusCode,
+		}
 	}
 
 	if resp.ContentLength > 0 {
