@@ -1,3 +1,4 @@
+// Package lancache is responsible for handling HTTP requests and caching files.
 package lancache
 
 import (
@@ -47,11 +48,13 @@ func (err responseError) StatusCode() int {
 	return err.code
 }
 
+// Application is the primary "thing" we're running here. It handles requests and caching.
 type Application struct {
 	cacheConfig *config.LancacheConfig
 	httpClient  *http.Client
 }
 
+// New creates an instance of the application, and instantiates required dependencies for it to run.
 func New() *Application {
 	// Set up cache directory.
 	err := os.MkdirAll(cacheDir, cacheDirPerms)
@@ -88,6 +91,7 @@ func newHTTPClient() *http.Client {
 	return &http.Client{Transport: t}
 }
 
+// StartCacheServer runs the primary HTTP server for the app.
 func (a *Application) StartCacheServer() {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/lancache-heartbeat", heartbeatHandler)

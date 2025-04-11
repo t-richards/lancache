@@ -5,7 +5,6 @@ default = "all"
 disable = [
   # things to address first
   "errcheck",
-  "revive",
 
   # objectively gross, literally nobody wants this
   "exhaustruct",

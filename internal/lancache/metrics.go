@@ -67,6 +67,7 @@ var (
 	)
 )
 
+// StartMetricsServer runs a prometheus metrics server on port 9090.
 func StartMetricsServer() {
 	mux := http.NewServeMux()
 	mux.Handle("/metrics", promhttp.Handler())

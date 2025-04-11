@@ -1,3 +1,4 @@
+// Package config provides a minimal API for using the application's config file.
 package config
 
 import (
@@ -13,19 +14,22 @@ import (
 const defaultConfigPath = "lancache.toml"
 
 var (
+	// ErrConfigDecode is returned when the config file cannot be decoded.
 	ErrConfigDecode = errors.New("while decoding config")
 )
 
-// Exported types for consumers of the configuration API.
+// LancacheConfig is the whole config file.
 type LancacheConfig struct {
 	Steam SteamConfig `toml:"steam"`
 }
 
+// SteamConfig provides Steam-specific configuration options.
 type SteamConfig struct {
 	Depots   []int64 `toml:"depots"`
 	CacheAll bool    `toml:"cache_all"`
 }
 
+// Load reads and decodes the config file from the default location.
 func Load() (*LancacheConfig, error) {
 	config := &LancacheConfig{}
 
