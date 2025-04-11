@@ -21,6 +21,7 @@ func main() {
 	app := lancache.New()
 
 	// Background services.
+	go lancache.StartPprofServer()
 	go lancache.StartMetricsServer()
 
 	// Run the cache server.

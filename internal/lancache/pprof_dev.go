@@ -14,11 +14,9 @@ const (
 	pprofAddr = "localhost:6060"
 )
 
-func init() {
-	go startPprofServer()
-}
-
-func startPprofServer() {
+// StartPprofServer starts a pprof server on localhost:6060.
+// This is only enabled in non-production builds.
+func StartPprofServer() {
 	log.Info().Str("addr", pprofAddr).Msg("running pprof server")
 
 	err := http.ListenAndServe(pprofAddr, nil) //nolint:gosec

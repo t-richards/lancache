@@ -6,17 +6,12 @@ disable = [
   # objectively gross, literally nobody wants this
   "exhaustruct",
 
-  # not needed for this project
-  "canonicalheader",
-
   # needs explicit configuration
   "depguard",
 
   # things we don't care about at the moment
   "gochecknoglobals",
-  "gochecknoinits",
   "nonamedreturns",
-  "paralleltest",
   "varnamelen"
 ]
 
