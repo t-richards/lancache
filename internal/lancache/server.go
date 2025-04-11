@@ -252,7 +252,13 @@ func (a *Application) fetchAndCache(
 			code:  http.StatusBadGateway,
 		}
 	}
-	defer resp.Body.Close()
+
+	defer func() {
+		closeErr := resp.Body.Close()
+		if closeErr != nil {
+			log.Error().Err(closeErr).Msg("while closing response body")
+		}
+	}()
 
 	// Ensure we have a 200 OK response.
 	if resp.StatusCode != http.StatusOK {

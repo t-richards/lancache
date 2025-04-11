@@ -3,9 +3,6 @@ version = "2"
 [linters]
 default = "all"
 disable = [
-  # things to address first
-  "errcheck",
-
   # objectively gross, literally nobody wants this
   "exhaustruct",
 
