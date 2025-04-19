@@ -33,7 +33,7 @@ services:
 
 > [!NOTE]
 > The cache directory must be writable by the container.
-> The container runs as the `app` user with UID 1234.
+> The container runs as the `app` user with UID/GID 1234.
 
 2. Set a DNS record for `lancache.steamcontent.com` pointing to the host running the app.
 
@@ -56,7 +56,7 @@ lancache.lan.              600     IN      A       192.168.1.121
 # File: /opt/lancache.toml
 
 [steam]
-# array(integer): Which depots to cache.
+# array(uint32): Which depots to cache.
 # You can find the relevant IDs for depots on https://steamdb.info/
 depots = [
   123, # Leave yourself a note about which game this is
