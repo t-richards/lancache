@@ -25,8 +25,8 @@ type LancacheConfig struct {
 
 // SteamConfig provides Steam-specific configuration options.
 type SteamConfig struct {
-	Depots   []int64 `toml:"depots"`
-	CacheAll bool    `toml:"cache_all"`
+	Depots   []uint32 `toml:"depots"` // From steamtypes.h
+	CacheAll bool     `toml:"cache_all"`
 }
 
 // Load reads and decodes the config file from the default location.
@@ -43,7 +43,7 @@ func Load() (*LancacheConfig, error) {
 	if config.Steam.CacheAll {
 		log.Info().Msg("caching all depots")
 	} else {
-		log.Info().Ints64("depots", config.Steam.Depots).Msg("caching depots")
+		log.Info().Uints32("depots", config.Steam.Depots).Msg("caching depots")
 	}
 
 	return config, nil
@@ -54,14 +54,15 @@ func Load() (*LancacheConfig, error) {
 // Binary search performance is superior to a map lookup until ~250 elements;
 // if you're caching more games than that, consider using the CacheAll option.
 func (c *LancacheConfig) HasDepot(depot string) bool {
-	intDepot, err := strconv.ParseInt(depot, 10, 64)
+	intDepot, err := strconv.ParseUint(depot, 10, 32)
 	if err != nil {
 		log.Error().Str("depot", depot).Msg("could not parse depot ID as int64")
 
 		return false
 	}
 
-	_, found := slices.BinarySearch(c.Steam.Depots, intDepot)
+	uintDepot := uint32(intDepot)
+	_, found := slices.BinarySearch(c.Steam.Depots, uintDepot)
 
 	return found
 }
