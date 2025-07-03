@@ -14,9 +14,9 @@ import (
 func main() {
 	if !env.Production() {
 		// Use pretty logging in development.
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 		currentEnv := os.Getenv("APP_ENV")
 		log.Info().Str("APP_ENV", currentEnv).Msg("non-production environment; using pretty logging")
-		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 
 	// Setup application.
