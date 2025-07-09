@@ -313,7 +313,7 @@ func createUpstreamRequest(r *http.Request) (*http.Request, error) {
 		return nil, fmt.Errorf("while creating upstream request: %w", err)
 	}
 
-	upstreamReq.Header.Add("User-Agent", "t-richards/lancache v0.0.1; +https://github.com/t-richards/lancache")
+	upstreamReq.Header.Add("User-Agent", "lancache/0.0.1 (+https://trnet.cc/lancache)")
 
 	return upstreamReq, nil
 }
