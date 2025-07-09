@@ -111,8 +111,7 @@ func (a *Application) StartCacheServer() {
 }
 
 func shouldCache(cacheConfig *config.LancacheConfig, depot string) bool {
-	bypass := env.Fetch("BYPASS_CACHE", "")
-	if strings.EqualFold(bypass, "true") {
+	if env.BypassCache() {
 		return false
 	}
 

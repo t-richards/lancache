@@ -6,7 +6,12 @@ import (
 	"strings"
 )
 
-// Production tells you whether the app is running in production.
+// BypassCache checks if the cache should be bypassed.
+func BypassCache() bool {
+	return strings.EqualFold(os.Getenv("BYPASS_CACHE"), "true")
+}
+
+// Production checks if the app is running in production mode.
 func Production() bool {
 	return strings.EqualFold(os.Getenv("APP_ENV"), "production")
 }
