@@ -2,14 +2,17 @@
 package lancache
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/rs/zerolog/log"
@@ -23,6 +26,9 @@ const cacheDir = "cache"
 
 // Default permissions on created directories.
 const cacheDirPerms = 0755
+
+// Timeout for server shutdown.
+const shutdownTimeout = 5 * time.Second
 
 // Timeout for reading headers on requests.
 const readHeaderTimeout = 10 * time.Second
@@ -104,10 +110,28 @@ func (a *Application) StartCacheServer() {
 
 	log.Info().Str("addr", server.Addr).Msg("running lancache server")
 
-	err := server.ListenAndServe()
+	go func() {
+		err := server.ListenAndServe()
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatal().Err(err).Msg("while running lancache server")
+		}
+	}()
+
+	// Allow for graceful shutdown.
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	sig := <-quit
+	log.Info().Stringer("signal", sig).Msg("signal received, stopping lancache server")
+
+	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+	defer cancel()
+
+	err := server.Shutdown(ctx)
 	if err != nil {
-		log.Fatal().Err(err).Msg("while starting lancache server")
+		log.Error().Err(err).Msg("forced shutdown")
 	}
+
+	log.Info().Msg("stopped lancache server")
 }
 
 func shouldCache(cacheConfig *config.LancacheConfig, depot string) bool {
