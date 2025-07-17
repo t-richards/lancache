@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
 	"github.com/t-richards/lancache/internal/config"
@@ -165,6 +166,7 @@ func (a *Application) lancacheHandler(w http.ResponseWriter, r *http.Request) {
 
 	startTime := time.Now()
 	depot := r.PathValue("depot")
+	logger := log.With().Str("depot", depot).Str("host", r.Host).Str("path", r.URL.Path).Logger()
 
 	// Record the duration of the request.
 	defer func() {
@@ -176,7 +178,8 @@ func (a *Application) lancacheHandler(w http.ResponseWriter, r *http.Request) {
 	if !shouldCache(a.cacheConfig, depot) {
 		// We don't want to cache this. Tell the Steam client to fetch it directly.
 		cacheSkips.WithLabelValues(depot).Inc()
-		log.Info().Str("depot", depot).Str("host", r.Host).Str("path", r.URL.Path).Msg("skip")
+		logger.Info().Msg("skip")
+
 		newLocation := "https://" + r.Host + r.URL.Path
 		http.Redirect(w, r, newLocation, http.StatusSeeOther)
 
@@ -191,7 +194,7 @@ func (a *Application) lancacheHandler(w http.ResponseWriter, r *http.Request) {
 		// We have this file already. Deliver it directly from the cache.
 		cacheHits.WithLabelValues(depot).Inc()
 		cacheHitBytes.WithLabelValues(depot).Add(float64(fileInfo.Size()))
-		log.Info().Str("depot", depot).Str("host", r.Host).Str("path", r.URL.Path).Msg("hit")
+		logger.Info().Msg("hit")
 		http.ServeFile(w, r, cachePath)
 
 		return
@@ -199,24 +202,19 @@ func (a *Application) lancacheHandler(w http.ResponseWriter, r *http.Request) {
 
 	// We don't have the file.
 	cacheMisses.WithLabelValues(depot).Inc()
-	log.Info().Str("depot", depot).Str("host", r.Host).Str("path", r.URL.Path).Msg("miss")
+	logger.Info().Msg("miss")
 
 	// Prepare the directory to store the file.
 	err = os.MkdirAll(filepath.Dir(cachePath), cacheDirPerms)
 	if err != nil {
-		log.Error().
-			Err(err).
-			Str("depot", depot).
-			Str("host", r.Host).
-			Str("path", r.URL.Path).
-			Msg("while creating cache directory")
+		logger.Error().Err(err).Msg("while creating cache directory")
 		http.Error(w, "Failed to create cache directory", http.StatusInternalServerError)
 
 		return
 	}
 
 	// Fetch it from the upstream server and cache it.
-	err = a.fetchAndCache(w, r, depot, cachePath)
+	err = a.fetchAndCache(logger, w, r, depot, cachePath)
 	if err != nil {
 		var responseErr ResponseError
 		if errors.As(err, &responseErr) {
@@ -227,7 +225,7 @@ func (a *Application) lancacheHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		// By this point, we may have already written some response data to the client.
 		// We can't change response headers now, so we log the error and move on.
-		log.Error().Err(err).Str("depot", depot).Str("host", r.Host).Str("path", r.URL.Path).Msg("while caching upstream")
+		logger.Error().Err(err).Msg("while caching upstream")
 
 		return
 	}
@@ -242,6 +240,7 @@ func (a *Application) lancacheHandler(w http.ResponseWriter, r *http.Request) {
 //
 // Multiple clients may trigger multiple fetches, which is acceptable.
 func (a *Application) fetchAndCache(
+	logger zerolog.Logger,
 	w http.ResponseWriter,
 	r *http.Request,
 	depotID string,
@@ -279,7 +278,7 @@ func (a *Application) fetchAndCache(
 	defer func() {
 		closeErr := resp.Body.Close()
 		if closeErr != nil {
-			log.Error().Err(closeErr).Msg("while closing response body")
+			logger.Error().Err(closeErr).Msg("while closing response body")
 		}
 	}()
 
