@@ -74,7 +74,7 @@ See also: a complete example [lancache.toml](lancache.toml).
 
 Requirements:
 
- - Go `=1.24`
+ - Go `=1.25`
 
 ```bash
 # Build
