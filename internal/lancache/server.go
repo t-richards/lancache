@@ -37,6 +37,7 @@ const readHeaderTimeout = 10 * time.Second
 // ResponseError is returned when the upstream server returns a non-200 response.
 type ResponseError interface {
 	error
+
 	StatusCode() int
 }
 
