@@ -43,6 +43,7 @@ type ResponseError interface {
 
 type responseError struct {
 	error
+
 	code int
 }
 
