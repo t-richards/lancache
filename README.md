@@ -1,6 +1,8 @@
 # lancache
 
-A proof-of-concept custom LAN cache for Steam.
+[![Go](https://github.com/t-richards/lancache/actions/workflows/go.yml/badge.svg)](https://github.com/t-richards/lancache/actions/workflows/go.yml)
+
+A LAN cache for Steam games.
 
 ## Features
 
