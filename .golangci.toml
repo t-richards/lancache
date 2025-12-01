@@ -9,6 +9,9 @@ disable = [
   # needs explicit configuration
   "depguard",
 
+  # deprecated
+  "wsl",
+
   # things we don't care about at the moment
   "gochecknoglobals",
   "nonamedreturns",
