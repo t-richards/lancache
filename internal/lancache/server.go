@@ -111,6 +111,8 @@ func newHTTPClient() *http.Client {
 	t.Protocols = new(http.Protocols)
 	t.Protocols.SetHTTP1(true)
 	t.Protocols.SetHTTP2(true)
+	t.ResponseHeaderTimeout = readHeaderTimeout
+	t.MaxIdleConnsPerHost = 10
 
 	return &http.Client{Transport: t}
 }
