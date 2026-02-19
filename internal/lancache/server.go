@@ -261,10 +261,7 @@ func (a *Application) lancacheHandler(w http.ResponseWriter, r *http.Request) {
 //
 // Using a temporary file ensures:
 // - No exposure of partially downloaded files.
-// - No need for complex locking mechanisms.
 // - Atomic disk writes via sync/rename.
-//
-// Multiple clients may trigger multiple fetches, which is acceptable.
 func (a *Application) fetchAndCache(
 	w http.ResponseWriter,
 	r *http.Request,
