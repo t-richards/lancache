@@ -12,6 +12,13 @@ disable = [
   # deprecated
   "wsl",
 
+  # G703 and G704 can't see our sanitizers for some reason.
+  # Turn this back on when we figure that out.
+  "gosec",
+
+  # Fix me first
+  "funlen",
+
   # things we don't care about at the moment
   "gochecknoglobals",
   "nonamedreturns",

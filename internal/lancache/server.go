@@ -12,10 +12,12 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
-	"github.com/rs/zerolog"
+	"golang.org/x/sync/singleflight"
+
 	"github.com/rs/zerolog/log"
 
 	"github.com/t-richards/lancache/internal/config"
@@ -24,6 +26,18 @@ import (
 
 // Directory where cached files are stored.
 const cacheDir = "cache"
+
+// Buffer size for copying upstream responses. Sized to cover the common Steam
+// depot chunk of ~1,048,656 bytes in a single cycle.
+const copyBufSize = 2 * 1024 * 1024
+
+var copyBufPool = sync.Pool{
+	New: func() any {
+		buf := make([]byte, copyBufSize)
+
+		return &buf
+	},
+}
 
 // Default permissions on created directories.
 const cacheDirPerms = 0755
@@ -61,6 +75,7 @@ func (err responseError) StatusCode() int {
 type Application struct {
 	cacheConfig *config.LancacheConfig
 	httpClient  *http.Client
+	sfGroup     singleflight.Group
 }
 
 // New creates an instance of the application, and instantiates required dependencies for it to run.
@@ -206,17 +221,20 @@ func (a *Application) lancacheHandler(w http.ResponseWriter, r *http.Request) {
 	cacheMisses.WithLabelValues(depot).Inc()
 	logger.Info().Msg("miss")
 
-	// Prepare the directory to store the file.
-	err = os.MkdirAll(filepath.Dir(cachePath), cacheDirPerms)
-	if err != nil {
-		logger.Error().Err(err).Msg("while creating cache directory")
-		http.Error(w, "Failed to create cache directory", http.StatusInternalServerError)
+	// Deduplicate concurrent fetches for the same file. The first goroutine to
+	// arrive (the leader) fetches from upstream and writes to disk + its own
+	// ResponseWriter. Later goroutines (followers) block here and serve from
+	// disk once the leader finishes.
+	var shared bool
 
-		return
-	}
+	_, err, shared = a.sfGroup.Do(cachePath, func() (any, error) {
+		mkErr := os.MkdirAll(filepath.Dir(cachePath), cacheDirPerms)
+		if mkErr != nil {
+			return nil, fmt.Errorf("while creating cache directory: %w", mkErr)
+		}
 
-	// Fetch it from the upstream server and cache it.
-	err = a.fetchAndCache(logger, w, r, depot, cachePath)
+		return nil, a.fetchAndCache(w, r, depot, cachePath)
+	})
 	if err != nil {
 		var responseErr ResponseError
 		if errors.As(err, &responseErr) {
@@ -231,18 +249,20 @@ func (a *Application) lancacheHandler(w http.ResponseWriter, r *http.Request) {
 
 		return
 	}
+
+	if shared {
+		// This goroutine was a follower. The file is now on disk.
+		cacheDedupedRequests.WithLabelValues(depot).Inc()
+		http.ServeFile(w, r, cachePath)
+	}
 }
 
 // fetchAndCache fetches a file from the upstream server and caches it.
 //
 // Using a temporary file ensures:
 // - No exposure of partially downloaded files.
-// - No need for complex locking mechanisms.
 // - Atomic disk writes via sync/rename.
-//
-// Multiple clients may trigger multiple fetches, which is acceptable.
 func (a *Application) fetchAndCache(
-	logger zerolog.Logger,
 	w http.ResponseWriter,
 	r *http.Request,
 	depotID string,
@@ -278,10 +298,7 @@ func (a *Application) fetchAndCache(
 	}
 
 	defer func() {
-		closeErr := resp.Body.Close()
-		if closeErr != nil {
-			logger.Error().Err(closeErr).Msg("while closing response body")
-		}
+		_ = resp.Body.Close()
 	}()
 
 	// Ensure we have a 200 OK response.
@@ -301,12 +318,26 @@ func (a *Application) fetchAndCache(
 	// Send file contents to the Steam client and the temporary file.
 	multiWriter := io.MultiWriter(w, tmpFile)
 
-	_, err = io.Copy(multiWriter, resp.Body)
+	bufPtr, _ := copyBufPool.Get().(*[]byte)
+	copyStart := time.Now()
+	_, err = io.CopyBuffer(multiWriter, resp.Body, *bufPtr)
+
+	cacheCopyDuration.Observe(time.Since(copyStart).Seconds())
+	copyBufPool.Put(bufPtr)
+
+	// Release the upstream connection now that the copy is complete.
+	_ = resp.Body.Close()
+
 	if err != nil {
 		return fmt.Errorf("while copying response: %w", err)
 	}
 
-	return finalizeTmpFile(tmpFile, filename)
+	finalizeStart := time.Now()
+	err = finalizeTmpFile(tmpFile, filename)
+
+	cacheFinalizeDuration.Observe(time.Since(finalizeStart).Seconds())
+
+	return err
 }
 
 func finalizeTmpFile(tmpFile *os.File, filename string) error {

@@ -65,6 +65,30 @@ var (
 		},
 		[]string{"depot"},
 	)
+
+	cacheDedupedRequests = promauto.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "lancache_singleflight_deduped_total",
+			Help: "Cache miss requests coalesced by singleflight (upstream fetch avoided).",
+		},
+		[]string{"depot"},
+	)
+
+	cacheCopyDuration = promauto.NewHistogram(
+		prometheus.HistogramOpts{
+			Name:    "lancache_copy_duration_seconds",
+			Help:    "Duration of the io.CopyBuffer call during a cache miss.",
+			Buckets: prometheus.DefBuckets,
+		},
+	)
+
+	cacheFinalizeDuration = promauto.NewHistogram(
+		prometheus.HistogramOpts{
+			Name:    "lancache_finalize_duration_seconds",
+			Help:    "Duration of finalizeTmpFile (sync + close + rename).",
+			Buckets: prometheus.DefBuckets,
+		},
+	)
 )
 
 // StartMetricsServer runs a prometheus metrics server on port 9090.
