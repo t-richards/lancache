@@ -19,6 +19,7 @@ jobs:
       env:
         GOFLAGS: "-trimpath -mod=readonly -modcacherw"
         CGO_ENABLED: 0
+        GOAMD64: v3
       run: |
         go mod verify
         go build -ldflags="-s -w" -o lancache

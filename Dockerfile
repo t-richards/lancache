@@ -2,6 +2,7 @@
 FROM golang:1.26-alpine AS builder
 ENV GOFLAGS="-trimpath -mod=readonly -modcacherw"
 ENV CGO_ENABLED=0
+ENV GOAMD64=v3
 WORKDIR /go/src/app
 RUN apk add --no-cache ca-certificates git libcap
 RUN mkdir -p /opt/cache

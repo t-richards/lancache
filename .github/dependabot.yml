@@ -27,6 +27,5 @@ updates:
       interval: "weekly"
     groups:
       github-actions:
-        update-types:
-        - minor
-        - patch
+        patterns:
+        - "*"
