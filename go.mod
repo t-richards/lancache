@@ -5,8 +5,8 @@ go 1.26.0
 require (
 	github.com/BurntSushi/toml v1.6.0
 	github.com/prometheus/client_golang v1.23.2
-	github.com/rs/zerolog v1.34.0
-	golang.org/x/sync v0.20.0
+	github.com/rs/zerolog v1.35.1
+	golang.org/x/sync v0.21.0
 )
 
 require (
