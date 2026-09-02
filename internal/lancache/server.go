@@ -27,10 +27,10 @@ import (
 // Directory where cached files are stored.
 const cacheDir = "cache"
 
-// Buffer size for copying upstream responses. Sized to cover the common Steam
+// Buffer size for copying upstream responses. Covers the most common Steam
 // depot chunk size of ~1,048,656 bytes in a single cycle.
 //
-// This represents a 1MB payload + 80 bytes of padding/container overhead.
+// This represents a 1MiB payload + 80 bytes of padding/container overhead.
 const steamChunkSize = 1<<20 + 80
 
 var copyBufPool = sync.Pool{
