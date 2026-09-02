@@ -9,6 +9,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// Metric labels.
+const (
+	LabelDepot = "depot"
+)
+
 var (
 	requests = promauto.NewCounter(
 		prometheus.CounterOpts{
@@ -23,7 +28,7 @@ var (
 			Help:    "The response time of requests.",
 			Buckets: prometheus.DefBuckets,
 		},
-		[]string{"depot"},
+		[]string{LabelDepot},
 	)
 
 	cacheHits = promauto.NewCounterVec(
@@ -31,7 +36,7 @@ var (
 			Name: "lancache_cache_hits_total",
 			Help: "The total number of cache hits.",
 		},
-		[]string{"depot"},
+		[]string{LabelDepot},
 	)
 
 	cacheHitBytes = promauto.NewCounterVec(
@@ -39,7 +44,7 @@ var (
 			Name: "lancache_cache_hit_bytes_total",
 			Help: "The total number of bytes served from the cache.",
 		},
-		[]string{"depot"},
+		[]string{LabelDepot},
 	)
 
 	cacheMisses = promauto.NewCounterVec(
@@ -47,7 +52,7 @@ var (
 			Name: "lancache_cache_misses_total",
 			Help: "The total number of cache misses.",
 		},
-		[]string{"depot"},
+		[]string{LabelDepot},
 	)
 
 	cacheMissBytes = promauto.NewCounterVec(
@@ -55,7 +60,7 @@ var (
 			Name: "lancache_cache_miss_bytes_total",
 			Help: "The total number of bytes fetched from the upstream server.",
 		},
-		[]string{"depot"},
+		[]string{LabelDepot},
 	)
 
 	cacheSkips = promauto.NewCounterVec(
@@ -63,7 +68,7 @@ var (
 			Name: "lancache_cache_skips_total",
 			Help: "The total number of cache skips.",
 		},
-		[]string{"depot"},
+		[]string{LabelDepot},
 	)
 
 	cacheDedupedRequests = promauto.NewCounterVec(
@@ -71,7 +76,7 @@ var (
 			Name: "lancache_singleflight_deduped_total",
 			Help: "Cache miss requests coalesced by singleflight (upstream fetch avoided).",
 		},
-		[]string{"depot"},
+		[]string{LabelDepot},
 	)
 
 	cacheCopyDuration = promauto.NewHistogram(

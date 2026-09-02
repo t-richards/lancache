@@ -238,8 +238,7 @@ func (a *Application) lancacheHandler(w http.ResponseWriter, r *http.Request) {
 		return nil, a.fetchAndCache(w, r, depot, cachePath)
 	})
 	if err != nil {
-		var responseErr ResponseError
-		if errors.As(err, &responseErr) {
+		if responseErr, ok := errors.AsType[ResponseError](err); ok {
 			// The upstream server returned a non-200 response.
 			http.Error(w, err.Error(), responseErr.StatusCode())
 

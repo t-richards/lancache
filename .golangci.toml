@@ -5,11 +5,13 @@ default = "all"
 disable = [
   # objectively gross, literally nobody wants this
   "exhaustruct",
+  "exhaustruct_v5",
 
   # needs explicit configuration
   "depguard",
 
   # deprecated
+  "gomodguard",
   "wsl",
 
   # G703 and G704 can't see our sanitizers for some reason.
