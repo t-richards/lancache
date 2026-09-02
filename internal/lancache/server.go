@@ -28,12 +28,14 @@ import (
 const cacheDir = "cache"
 
 // Buffer size for copying upstream responses. Sized to cover the common Steam
-// depot chunk of ~1,048,656 bytes in a single cycle.
-const copyBufSize = 2 * 1024 * 1024
+// depot chunk size of ~1,048,656 bytes in a single cycle.
+//
+// This represents a 1MB payload + 80 bytes of padding/container overhead.
+const steamChunkSize = 1<<20 + 80
 
 var copyBufPool = sync.Pool{
 	New: func() any {
-		buf := make([]byte, copyBufSize)
+		buf := make([]byte, steamChunkSize)
 
 		return &buf
 	},
